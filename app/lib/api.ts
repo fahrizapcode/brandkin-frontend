@@ -97,6 +97,27 @@ export async function generatePosePack(request: PosePackRequest): Promise<PosePa
   return await response.json();
 }
 
+// Gallery item type
+export interface GalleryItem {
+  id: number;
+  imageUrl: string;
+  assetType: 'mascot' | 'avatar';
+  businessName?: string;
+  createdAt?: string;
+}
+
+// Fetch latest generated images for gallery
+export async function fetchGallery(limit = 6): Promise<GalleryItem[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/v1/gallery?limit=${limit}`);
+    if (!response.ok) return [];
+    const data = await response.json();
+    return data.items as GalleryItem[];
+  } catch {
+    return [];
+  }
+}
+
 // Download image
 export async function downloadImage(imageUrl: string, filename: string): Promise<void> {
   const response = await fetch(imageUrl);

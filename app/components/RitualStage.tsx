@@ -1,7 +1,9 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 import { GenerationStatus, GenerationResult, GenerationType, PosePackResult, ImageOption } from "../types";
+import { fetchGallery, GalleryItem } from "../lib/api";
 import RitualCircle from "./RitualCircle";
 import GenerationResultComponent from "./GenerationResult";
 import PosePackResultComponent from "./PosePackResult";
@@ -115,6 +117,15 @@ export default function RitualStage({
   const isCompleted = status === "completed";
   const isActive = isGenerating || isManifesting || isGeneratingPoses;
 
+  // Gallery state
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+
+  useEffect(() => {
+    if (isIdle) {
+      fetchGallery(6).then(setGalleryItems);
+    }
+  }, [isIdle]);
+
   // Get current progress text based on progress percentage
   const getCurrentText = () => {
     const texts = progressTexts[status];
@@ -150,11 +161,11 @@ export default function RitualStage({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col items-center text-center px-8 mb-28"
+            className="flex flex-col items-center text-center px-8 py-8 overflow-y-auto max-h-full no-scrollbar"
           >
             {/* Clean mystical circle portal */}
             <motion.div
-              className="relative w-32 h-32 mb-8"
+              className="relative w-32 h-32 mb-8 shrink-0 mt-30"
               animate={{
                 scale: [1, 1.05, 1],
               }}
@@ -202,6 +213,53 @@ export default function RitualStage({
             <p className="text-[#9CA3AF] text-lg max-w-md">
               Fill in your Brand DNA in the sidebar and click &quot;Abracadabra&quot; to begin the digital transmutation ritual.
             </p>
+
+            {/* Previous Generations Gallery */}
+            {galleryItems.length > 0 && (
+              <motion.div
+                className="mt-10 w-full max-w-lg mt-20"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+              >
+                <p className="text-[#6B7280] text-xs uppercase tracking-widest mb-4 text-center">
+                  Previously Summoned
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {galleryItems.map((item, idx) => (
+                    <motion.div
+                      key={item.id}
+                      className="relative aspect-square rounded-xl overflow-hidden group cursor-default"
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.35 + idx * 0.07, duration: 0.4 }}
+                      style={{
+                        boxShadow: "0 0 0 1px rgba(139,92,246,0.15), 0 4px 24px rgba(0,0,0,0.4)",
+                      }}
+                    >
+                      {/* Image */}
+                      <img
+                        src={item.imageUrl}
+                        alt={item.businessName || item.assetType}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      {/* Overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2">
+                        {item.businessName && (
+                          <p className="text-white text-[10px] font-medium truncate">{item.businessName}</p>
+                        )}
+                        <p className="text-[#9CA3AF] text-[9px] capitalize">{item.assetType}</p>
+                      </div>
+                      {/* Subtle border shimmer */}
+                      <div
+                        className="absolute inset-0 rounded-xl pointer-events-none"
+                        style={{ boxShadow: "inset 0 0 0 1px rgba(139,92,246,0.25)" }}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </motion.div>
         )}
 
